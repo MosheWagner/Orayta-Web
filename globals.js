@@ -1,4 +1,3 @@
-// TODO: Git repo (OraytaWeb?)
 // TODO: Create Github.io pages for the git repo
 // TODO: Get github repo for 'Orayta', and create a Github.io pages there (linking to the real one)
 
