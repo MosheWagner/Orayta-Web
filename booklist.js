@@ -32,7 +32,7 @@ function displayBookTree(booklist) {
 }
 
 function loadBook(b) {
-    window.location = '/book.html?book_id=' + b + ".obk";
+    window.location = './book.html?book_id=' + b + ".obk";
 }
 
 function displayBookTreeRec(booklist, elem, indent) {
