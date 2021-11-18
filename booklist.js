@@ -32,6 +32,9 @@ function displayBookTree(booklist) {
 }
 
 function loadBook(b) {
+    if (b == undefined) {
+        console.log("Error, book is undefined!");
+    }
     window.location = './book.html?book_id=' + b + ".obk";
 }
 

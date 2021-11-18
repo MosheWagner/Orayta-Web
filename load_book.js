@@ -1,12 +1,21 @@
-// TODO: Full book parsing
-
-// TODO: Book index (side bar?)
+// TODO: Improve book parsing
+// TODO: Move index to side bar
+// TODO: Improve index look
 // TODO: Improve link parsing
 // TODO: Book interleaving
 // TODO: Nikud and Teamin toggle
-// TODO: Handle comments (start with #)
 
-const LEVEL_SIGNS = "$#^@~";
+const urlSearchParams = new URLSearchParams(window.location.search);
+const params = Object.fromEntries(urlSearchParams.entries());
+
+const LEVEL_INDEXES = {
+    "$" : 1,
+    "#" : 1,
+    "^" : 2,
+    "@": 3,
+    "~": 4
+}
+
 const LEVEL_REGEXES = [
     // General level marks
     /(~) ([^\n]*)/gm,
@@ -35,10 +44,20 @@ function fetchUnzipBook(book_short_path) {
     .then(zip => zip.file("BookText").async("string"));
 }
 
-function levelHtml(level_sign, level_title) {
-    let level_index = LEVEL_SIGNS.indexOf(level_sign);
+function linkToAnchor(level_index, level_title, escaped_level_title) {
+    let style = "";
+    if (level_index > 2) {
+        style="style=\"display:inline\"";
+    }
+    return `<small><h${level_index} ${style}><a href=${selfLink()}&anchor=${escaped_level_title}>${level_title}</a></h${level_index}><small> &nbsp&nbsp`;
+}
+
+function levelHtml(offset, level_sign, level_title, index) {
+    let level_index = LEVEL_INDEXES[level_sign];
     let escaped_level_title = level_title.replaceAll(" ", "_");
-    if (level_index == 0) {level_index++};
+
+    index[offset] = linkToAnchor(level_index, level_title, escaped_level_title);
+
     return `<h${level_index}><div id=${escaped_level_title}>${level_title}</div></h${level_index}>`;
 }
 
@@ -80,20 +99,27 @@ function decodeLink(type, encoded, disp) {
 }
 
 function parseBook(book_text) {
+    let index = {};
     for (regex of LEVEL_REGEXES) {
-        book_text = book_text.replace(regex, (_, sign, title) => levelHtml(sign, title));
+        book_text = book_text.replace(regex, (match, sign, title) => levelHtml(book_text.indexOf(match), sign, title, index));
     }
     for (replace of ADDITIONAL_REPLACES) {
         book_text = book_text.replace(replace[0], replace[1]);
     }
     book_text = book_text.replace(LINK_REGEX, (_, type, encoded, disp) => decodeLink(type, encoded, disp));
-    
 
-    return book_text;
+    return [index, book_text];
+}
+
+function renderIndex(index_map) {
+    for (k of Object.keys(index_map).map(x => parseInt(x)).sort((a, b) => a - b)) {
+        $("#index").append(index_map[k]);
+    }
 }
 
 function displayBook(book_short_path) {
-    fetchUnzipBook(book_short_path).then(parseBook).then(function success(text) {
+    fetchUnzipBook(book_short_path).then(parseBook).then(function success([index, text]) {
+        renderIndex(index);
         $("#contents").append(text);
         scrollToAnchor();
     }, function error(e) {
@@ -104,9 +130,16 @@ function displayBook(book_short_path) {
     });
 }
 
+function selfLink() {
+    if (params['book_id'] != undefined) {
+        return `?book_id=${params['book_id']}`
+    }
+    if (params['book_uid'] != undefined) {
+        return `?book_uid=${params['book_uid']}`
+    } 
+}
+
 function loadBook() {
-    const urlSearchParams = new URLSearchParams(window.location.search);
-    const params = Object.fromEntries(urlSearchParams.entries());
     if (params['book_id'] != undefined) {
         displayBook(params['book_id']);
     }
@@ -116,8 +149,6 @@ function loadBook() {
 }
 
 function scrollToAnchor() {
-    const urlSearchParams = new URLSearchParams(window.location.search);
-    const params = Object.fromEntries(urlSearchParams.entries());
     if (params['anchor'] != undefined && params['anchor'] != "") {
         document.getElementById(params['anchor'].replaceAll(" ", "_")).scrollIntoView();
     }
