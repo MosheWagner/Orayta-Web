@@ -4,14 +4,35 @@
 // TODO: Hide booklist after loading book
 // TODO: Put booklist in a sidebar? (Only for desktop mode?)
 
-fetch("./booklist.json").then(res => res.json()).then(displayBookTree)
+function showBookTree() {
+    fetch("./booklist.json").then(res => res.json()).then(displayBookTree);
+}
+
+function hasUid(name, book, uid, callback) {
+    if (book['UniqueId'] == uid) {
+        callback(name + '.obk');
+    }
+}
+
+function findBookByUid(uid, callback) {
+    fetch("./booklist.json").then(res => res.json()).then(e => traverseBookTreeRec(e, (name, book) => hasUid(name, book, uid, callback)));
+}
+
+function traverseBookTreeRec(booklist, callback) {
+    for (let [name, book] of Object.entries(booklist['files'])) {
+        callback(name, book);
+    }
+    for (let [, subfolder] of Object.entries(booklist['subfolders'])) {
+        traverseBookTreeRec(subfolder, callback);
+    }
+}
 
 function displayBookTree(booklist) {
     displayBookTreeRec(booklist, $("#booklist"), 0)
 }
 
 function loadBook(b) {
-    displayBook(b + ".obk");
+    window.location = '/book.html?book_id=' + b + ".obk";
 }
 
 function displayBookTreeRec(booklist, elem, indent) {
