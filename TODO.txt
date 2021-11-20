@@ -1,5 +1,4 @@
-// TODO: Some reasonable CSS
+// TODO: Some reasonable CSS (With a nice Hebrew font)
 // TODO: Bookmark support
-// TODO: External linking support (anchors should work! [but only after rendering])
 // FAR TODO: Search support (this requires book selection UI, reading the search DB, searching, linking back)
 // FAR TODO: Limud Yomi support
